@@ -1,0 +1,12 @@
+
+问题:
+
+ 我想知道, 我们这个框架其它用法:
+
+ 如下在http 内部, 关于include, 配置文件添加和删除, 修改和更新, 时候有操作方法, 如何操作? 如果没有, 你推荐如何设计呢? 设计哪些接口出来合理?
+ http {
+   include       conf/mime.types;
+   include       conf/vhosts/*.conf;
+ }
+
+ 比如: conf/vhosts/app.conf 中这里不应该有http配置段, 只能写http内部的参数, 
