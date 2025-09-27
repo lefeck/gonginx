@@ -1,0 +1,347 @@
+Index: examples/test/roundrobin.conf
+===================================================================
+diff --git a/examples/test/roundrobin.conf b/examples/test/roundrobin.conf
+deleted file mode 100644
+--- a/examples/test/roundrobin.conf	(revision 2fcbb6787240f9f1d17ad5ccc287ae84966dccef)
++++ /dev/null	(revision 2fcbb6787240f9f1d17ad5ccc287ae84966dccef)
+@@ -1,17 +0,0 @@
+-upstream rrups {
+-	server 127.0.0.1:8011 weight=2 max_conns=2 max_fails=2 fail_timeout=5;
+-	server 127.0.0.1:8012;
+-	keepalive 32;
+-}
+-
+-server {
+-    listen 8004;
+-server_name rrups.taohui.tech;
+-	error_log myerror.log info;
+-
+-location /{
+-proxy_pass http://rrups;
+-proxy_http_version 1.1;
+-proxy_set_header Connection "";
+-	}
+-}
+Index: examples/test/main.go
+===================================================================
+diff --git a/examples/test/main.go b/examples/test/main.go
+deleted file mode 100644
+--- a/examples/test/main.go	(revision 2fcbb6787240f9f1d17ad5ccc287ae84966dccef)
++++ /dev/null	(revision 2fcbb6787240f9f1d17ad5ccc287ae84966dccef)
+@@ -1,97 +0,0 @@
+-package main
+-
+-import (
+-	"fmt"
+-	"github.com/tufanbarisyildirim/gonginx/config"
+-	"github.com/tufanbarisyildirim/gonginx/dumper"
+-	"github.com/tufanbarisyildirim/gonginx/parser"
+-	"os"
+-)
+-
+-func formattedConfigFile(file string) error {
+-	data, err := os.ReadFile(file)
+-	if err != nil {
+-		return fmt.Errorf("failed to read config file: %w", err)
+-	}
+-
+-	p := parser.NewStringParser(string(data))
+-	conf, err := p.Parse()
+-	if err != nil {
+-		return fmt.Errorf("failed to parse config: %w", err)
+-	}
+-	dumpString := dumper.DumpConfig(conf, dumper.IndentedStyle)
+-	if err := os.WriteFile(file, []byte(dumpString), 0644); err != nil {
+-		return fmt.Errorf("failed to write config file: %w", err)
+-	}
+-	return nil
+-}
+-
+-func test() ([]*config.Include, error) {
+-	nginxConfig := "./nginx.conf"
+-	formattedConfigFile(nginxConfig)
+-
+-	p, err := parser.NewParser(nginxConfig)
+-	if err != nil {
+-		panic(err)
+-	}
+-	conf, err := p.Parse()
+-	if err != nil {
+-		panic(err)
+-	}
+-
+-	directives := conf.FindDirectives("include")
+-	for _, directive := range directives {
+-		//println("Found directive:", directive.GetName())
+-		fmt.Printf("name: %s, value: %s \n", directive.GetName(), directive.GetParameters()[0].GetValue())
+-		includePath := directive.GetParameters()[0].GetValue()
+-		fmt.Printf("Found include: %s\n", includePath)
+-
+-		// 构造一个 config.Include 对象
+-		include := &config.Include{
+-			IncludePath: includePath,
+-		}
+-		fmt.Println(include.IncludePath)
+-
+-		includeDirective, err := p.ParseInclude(include)
+-
+-		if err != nil {
+-			fmt.Printf("Error parsing include %s: %v\n", includePath, err)
+-			continue
+-		}
+-		fmt.Printf("Included directive from %s:\n", includePath)
+-
+-	}
+-}
+-
+-func getports()  {
+-	// 我执行到下面这一行就报错了
+-	block, ok := includeDirective.(*config.Block)
+-	if !ok {
+-		fmt.Printf("Included directive %s is not a block directive\n", includePath)
+-		continue
+-	}
+-	servers := block.FindDirectives("server")
+-	ports := make([]string, 0)
+-	for _, server := range servers {
+-		parent := server.GetParent()
+-		if parent == nil {
+-			fmt.Println("server directive has no parent block")
+-		}
+-		fmt.Println("Server Name:", server.GetName())
+-		// 对每个server指令，查找其下的listen指令
+-		listens := server.GetBlock().FindDirectives("listen")
+-		if len(listens) > 0 {
+-			listenPorts := listens[0].GetParameters()
+-			for _, port := range listenPorts {
+-				ports = append(ports, port.GetValue())
+-			}
+-		}
+-	}
+-	fmt.Println("Server Ports:", ports)
+-}
+-}
+-
+-
+-func main() {
+-	test()
+-}
+Index: examples/test/nginx.conf
+===================================================================
+diff --git a/examples/test/nginx.conf b/examples/test/nginx.conf
+deleted file mode 100644
+--- a/examples/test/nginx.conf	(revision 2fcbb6787240f9f1d17ad5ccc287ae84966dccef)
++++ /dev/null	(revision 2fcbb6787240f9f1d17ad5ccc287ae84966dccef)
+@@ -1,80 +0,0 @@
+-user www www;
+-worker_processes 5;
+-error_log logs/error.log;
+-pid logs/nginx.pid;
+-worker_rlimit_nofile 8192;
+-events {
+-    worker_connections 4096;
+-}
+-http {
+-    #     include mime.types;
+-    include access.conf;
+-    include roundrobin.conf;
+-    index index.html index.htm index.php;
+-    default_type application/octet-stream;
+-    log_format main '$remote_addr - $remote_user [$time_local]  $status  "$request" $body_bytes_sent "$http_referer"  "$http_user_agent" "$http_x_forwarded_for"';
+-    access_log logs/access.log main;
+-    sendfile on;
+-    tcp_nopush on;
+-    server_names_hash_bucket_size 128;
+-    upstream big_server_com {
+-        server 127.0.0.3:8000 weight=5;
+-        server 127.0.0.3:8001 weight=5;
+-        server 192.168.0.1:8000;
+-        server 192.168.0.1:8001;
+-    }
+-    server {
+-        listen 80;
+-        server_name domain1.com www.domain1.com;
+-        access_log logs/domain1.access.log main;
+-        root html;
+-        location ~ \.php$ {
+-            fastcgi_pass 127.0.0.1:1025;
+-        }
+-    }
+-    server {
+-        listen 80;
+-        server_name domain2.com www.domain2.com;
+-        access_log logs/domain2.access.log main;
+-        location ~ ^/(images|javascript|js|css|flash|media|static)/ {
+-            root /var/www/virtual/big.server.com/htdocs;
+-            expires 30d;
+-        }
+-        location / {
+-            proxy_pass http://127.0.0.1:8080;
+-        }
+-    }
+-    server {
+-        listen 80;
+-        server_name big.server.com;
+-        access_log logs/big.server.access.log main;
+-        location / {
+-            proxy_pass http://big_server_com;
+-        }
+-    }
+-}
+-
+-
+-stream {
+-    #将12345端口转发到192.168.1.23的3306端口
+-    server {
+-        listen 12345;
+-        server_name test.mysqlproxy;
+-        proxy_connect_timeout 5s;
+-        proxy_timeout 20s;
+-        proxy_pass 192.168.1.23:3306;
+-    }
+-    #将udp 53端口转发到192.168.1.23 53端口
+-    server {
+-        listen 53 udp reuseport;
+-        proxy_timeout 20s;
+-        proxy_pass 192.168.1.23:53;
+-    }
+-    #ipv4转发到ipv6
+-    server {
+-        listen 9135;
+-        proxy_connect_timeout 10s;
+-        proxy_timeout 30s;
+-        proxy_pass [2607:fcd0:107:3cc::1]:9135;
+-    }
+-}
+\ No newline at end of file
+Index: examples/test/access.conf
+===================================================================
+diff --git a/examples/test/access.conf b/examples/test/access.conf
+deleted file mode 100644
+--- a/examples/test/access.conf	(revision 2fcbb6787240f9f1d17ad5ccc287ae84966dccef)
++++ /dev/null	(revision 2fcbb6787240f9f1d17ad5ccc287ae84966dccef)
+@@ -1,24 +0,0 @@
+-server {
+-    listen 8080;
+-	server_name access.taohui.tech;
+-	error_log  logs/error.log  debug;
+-	#root html/;
+-	default_type text/plain;
+-	location /auth_basic {
+-		satisfy any;
+-		auth_basic "test auth_basic";
+-		auth_basic_user_file examples/auth.pass;
+-		deny all;
+-	}
+-
+-	location / {
+-		auth_request /test_auth;
+-	}
+-
+-	location = /test_auth {
+-		proxy_pass http://127.0.0.1:8090/auth_upstream;
+-		proxy_pass_request_body off;
+-    		proxy_set_header Content-Length "";
+-    		proxy_set_header X-Original-URI $request_uri;
+-	}
+-}
+Index: examples/test/writeconfig.go
+===================================================================
+diff --git a/examples/test/writeconfig.go b/examples/test/writeconfig.go
+deleted file mode 100644
+--- a/examples/test/writeconfig.go	(revision 2fcbb6787240f9f1d17ad5ccc287ae84966dccef)
++++ /dev/null	(revision 2fcbb6787240f9f1d17ad5ccc287ae84966dccef)
+@@ -1,30 +0,0 @@
+-package main
+-
+-import (
+-	"github.com/lefeck/gonginx/dumper"
+-	"github.com/lefeck/gonginx/parser"
+-)
+-
+-func writerConfig() error {
+-	p, err := parser.NewParser("nginx.conf")
+-	if err != nil {
+-		return err
+-	}
+-
+-	cfg, err := p.Parse()
+-
+-	if err != nil {
+-		return err
+-	}
+-
+-	err = dumper.WriteConfig(cfg, dumper.IndentedStyle, true)
+-
+-	if err != nil {
+-		return err
+-	}
+-	return nil
+-}
+-
+-func main() {
+-	writerConfig()
+-}
+Index: examples/test/nginx.conf-bak
+===================================================================
+diff --git a/examples/test/nginx.conf-bak b/examples/test/nginx.conf-bak
+deleted file mode 100644
+--- a/examples/test/nginx.conf-bak	(revision 2fcbb6787240f9f1d17ad5ccc287ae84966dccef)
++++ /dev/null	(revision 2fcbb6787240f9f1d17ad5ccc287ae84966dccef)
+@@ -1,55 +0,0 @@
+-user www www;
+-worker_processes 5;
+-error_log logs/error.log;
+-pid logs/nginx.pid;
+-worker_rlimit_nofile 8192;
+-events {
+-    worker_connections 4096;
+-}
+-http {
+-    #     include mime.types;
+-    include access.conf;
+-    include roundrobin.conf;
+-    index index.html index.htm index.php;
+-    default_type application/octet-stream;
+-    log_format main '$remote_addr - $remote_user [$time_local]  $status  "$request" $body_bytes_sent "$http_referer"  "$http_user_agent" "$http_x_forwarded_for"';
+-    access_log logs/access.log main;
+-    sendfile on;
+-    tcp_nopush on;
+-    server_names_hash_bucket_size 128;
+-    upstream big_server_com {
+-        server 127.0.0.3:8000 weight=5;
+-        server 127.0.0.3:8001 weight=5;
+-        server 192.168.0.1:8000;
+-        server 192.168.0.1:8001;
+-    }
+-    server {
+-        listen 80;
+-        server_name domain1.com www.domain1.com;
+-        access_log logs/domain1.access.log main;
+-        root html;
+-        location ~ \.php$ {
+-            fastcgi_pass 127.0.0.1:1025;
+-        }
+-    }
+-    server {
+-        listen 80;
+-        server_name domain2.com www.domain2.com;
+-        access_log logs/domain2.access.log main;
+-        location ~ ^/(images|javascript|js|css|flash|media|static)/ {
+-            root /var/www/virtual/big.server.com/htdocs;
+-            expires 30d;
+-        }
+-        location / {
+-            proxy_pass http://127.0.0.1:8080;
+-        }
+-    }
+-    server {
+-        listen 80;
+-        server_name big.server.com;
+-        access_log logs/big.server.access.log main;
+-        location / {
+-            proxy_pass http://big_server_com;
+-        }
+-    }
+-}
+\ No newline at end of file
