@@ -99,7 +99,7 @@ BenchmarkParseMemoryAllocation-12 164806   7427 ns/op  10152 B/op  146 allocs/op
 ### ✅ 完整文档体系
 1. **[API_REFERENCE.md](API_REFERENCE.md)** - 1070行完整 API 文档
 2. **[GUIDE.md](GUIDE.md)** - 综合使用指南和最佳实践
-3. **[doc.md](doc.md)** - 功能详解和实现状态追踪
+3. **[doc.md](../integration_tests/doc.md)** - 功能详解和实现状态追踪
 4. **各模块 README** - 详细的使用说明和示例
 
 ### ✅ 示例代码库 (`examples/`)

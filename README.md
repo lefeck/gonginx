@@ -290,11 +290,11 @@ go test -bench=. ./benchmarks/
 - **[Complete Guide](GUIDE.md)** - Comprehensive usage guide with examples
 - **[API Reference](API_REFERENCE.md)** - Full API documentation
 - **[Implementation Summary](IMPLEMENTATION_SUMMARY.md)** - Technical implementation details
-- **[Test Summary](TEST_SUMMARY.md)** - Testing strategy and results
+- **[Test Summary](test/TEST_SUMMARY.md)** - Testing strategy and results
 
 ## Contributing
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+We welcome contributions! Please see our [Contributing Guide](integration_tests/CONTRIBUTING.md) for details.
 
 ### Development Setup
 ```bash
