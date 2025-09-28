@@ -1,6 +1,8 @@
 module github.com/lefeck/gonginx
 
-go 1.21
+go 1.22
+
+toolchain go1.22.8
 
 require (
 	github.com/imega/luaformatter v0.0.0-20211025140405-86b0a68d6bef

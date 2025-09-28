@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/lefeck/gonginx/dumper"
 	"github.com/lefeck/gonginx/parser"
-	"os"
 )
 
 func parseConfigAndGetPorts(filePath string) ([]string, error) {
@@ -70,13 +71,13 @@ func getServer(filePath string) ([]string, error) {
 }
 
 func main() {
-	ports, err := parseConfigAndGetPorts("./examples/parse-nginx-conf-get-listen-port/nginx.conf")
+	ports, err := parseConfigAndGetPorts("nginx.conf")
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println(ports)
 
-	//upstreams, err := getServer("./examples/parse-nginx-conf-get-listen-port/nginx.conf")
+	//upstreams, err := getServer("nginx.conf")
 	//if err != nil {
 	//	panic(err)
 	//}

@@ -25,6 +25,7 @@ func writerConfig() error {
 	return nil
 }
 
-func main() {
-	writerConfig()
-}
+// Uncomment to run this example independently
+// func main() {
+// 	writerConfig()
+// }

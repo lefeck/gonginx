@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/tufanbarisyildirim/gonginx/config"
-	"github.com/tufanbarisyildirim/gonginx/dumper"
-	"github.com/tufanbarisyildirim/gonginx/parser"
+
+	"github.com/lefeck/gonginx/config"
+	"github.com/lefeck/gonginx/dumper"
+	"github.com/lefeck/gonginx/parser"
 )
 
 func upstream(file string) {
@@ -43,7 +44,7 @@ func upstream(file string) {
 	//fmt.Println("server parent:", parent.GetName())
 }
 
-func main() {
-	upstream("./examples/parse-nginx-conf-get-listen-port/nginx.conf")
-
-}
+// Uncomment to run this example independently
+// func main() {
+// 	upstream("./examples/parse-nginx-conf-get-listen-port/nginx.conf")
+// }
